@@ -6,8 +6,8 @@ This repository contains companion code for the paper:
 Auditory Grouping Principles". Prem Seetharaman, Gordon Wichern, 
 Jonathan Le Roux, Bryan Pardo.
 
-**There is also a helpful companion notebook located here: 
-[link](https://pseeth.github.io/bootstrapping-computer-audition/). It contains 
+**There is also a helpful companion notebook located 
+[here](https://pseeth.github.io/bootstrapping-computer-audition/).** It contains 
 audio examples and code for reproducing the figures in the paper.
 
 ## Setting up the environment
