@@ -1,0 +1,106 @@
+# Macros:
+# ==============================================================================
+MUSDB_ROOT = '/home/data/musdb/raw/stems/'
+SCAPER_SOURCE_MATERIAL = '/home/data/musdb/formatted/wav16k/'
+
+# Parameters for analyze:
+# ==============================================================================
+analyze.output_folder = @output_folder()
+
+# Parameters for BSSEvalScale:
+# ==============================================================================
+BSSEvalScale.compute_permutation = False
+BSSEvalScale.source_labels = ['accompaniment', 'vocals']
+
+# Parameters for segment_and_separate/build_dataset:
+# ==============================================================================
+segment_and_separate/build_dataset.dataset_class = @segment_and_separate/AudioSegmentDataset
+
+# Parameters for PrimitiveClustering
+# ==============================================================================
+separator/repetition/unginify.kls = @nussl.separation.primitive.FT2D
+separator/repetition/unginify.kls_name = 'nussl.separation.primitive.FT2D'
+separator/repetition/nussl.separation.primitive.FT2D.neighborhood_size = (1, 35)
+separator/repetition/nussl.separation.primitive.FT2D.high_pass_cutoff = 250
+separator/repetition/nussl.separation.primitive.FT2D.use_bg_2dft = True
+separator/repetition/build_primitive_separator.kls = @separator/repetition/unginify
+
+separator/micromodulation/unginify.kls = @nussl.separation.primitive.FT2D
+separator/micromodulation/unginify.kls_name = 'nussl.separation.primitive.FT2D'
+separator/micromodulation/nussl.separation.primitive.FT2D.neighborhood_size = (1, 35)
+separator/micromodulation/nussl.separation.primitive.FT2D.high_pass_cutoff = 250
+separator/micromodulation/nussl.separation.primitive.FT2D.use_bg_2dft = False
+separator/micromodulation/build_primitive_separator.kls = @separator/micromodulation/unginify
+
+separator/proximity/unginify.kls = @nussl.separation.primitive.Melodia
+separator/proximity/unginify.kls_name = 'nussl.separation.primitive.Melodia'
+separator/proximity/nussl.separation.primitive.Melodia.add_lower_octave = False
+separator/proximity/nussl.separation.primitive.Melodia.apply_vowel_filter = False
+separator/proximity/build_primitive_separator.kls = @separator/proximity/unginify
+
+separator/timbre/unginify.kls = @nussl.separation.primitive.HPSS
+separator/timbre/unginify.kls_name = 'nussl.separation.primitive.HPSS'
+separator/timbre/build_primitive_separator.kls = @separator/timbre/unginify
+
+build_primitive_clustering.scopes = [
+    'repetition', 'micromodulation', 'proximity', 'timbre'
+]
+
+nussl.separation.composite.EnsembleClustering.num_sources = 2
+nussl.separation.composite.EnsembleClustering.separators = @build_primitive_clustering()
+nussl.separation.composite.EnsembleClustering.weights = [3, 1, 2, 1]
+nussl.separation.composite.EnsembleClustering.returns = [[1], [1], [1], [0]]
+build_fixed_centers.weights = [3, 1, 2, 1]
+nussl.separation.composite.EnsembleClustering.beta = 2.5
+nussl.separation.composite.EnsembleClustering.init = @build_fixed_centers()
+nussl.separation.composite.EnsembleClustering.fit_clusterer = False
+
+# Parameters for evaluate:
+# ==============================================================================
+segment_and_separate.block_on_gpu = False
+segment_and_separate.eval_class = @evaluator/unginify
+segment_and_separate.num_workers = 20
+segment_and_separate.output_folder = @output_folder()
+segment_and_separate.seed = 0
+segment_and_separate.separation_algorithm = @separator/unginify
+segment_and_separate.use_threadpool = False
+segment_and_separate.save_audio_path = '/home/data/music_separated_30/youtube/'
+segment_and_separate.num_sources = 2
+
+# Parameters for segment_and_separate/AudioSegmentDataset:
+# ==============================================================================
+segment_and_separate/AudioSegmentDataset.folder = '/home/data/'
+segment_and_separate/AudioSegmentDataset.mix_folder = 'music_flac'
+segment_and_separate/AudioSegmentDataset.segment_length = 30
+segment_and_separate/AudioSegmentDataset.hop_length = 15
+segment_and_separate/AudioSegmentDataset.has_sources = False
+
+# Parameters for output_folder:
+# ==============================================================================
+output_folder._output_folder = \
+    '/home/pseetharaman/Dropbox/research/bootstrapping/musdb/exp/segment_and_separate/PrimitiveClusteringYouTube'
+
+# Parameters for STFTParams:
+# ==============================================================================
+STFTParams.hop_length = 128
+STFTParams.window_length = 512
+STFTParams.window_type = 'sqrt_hann'
+
+# Parameters for stft_params/unginify:
+# ==============================================================================
+stft_params/unginify.kls = @nussl.STFTParams
+stft_params/unginify.kls_name = 'nussl.STFTParams'
+
+# Parameters for separator/unginify:
+# ==============================================================================
+separator/unginify.kls = @nussl.separation.composite.EnsembleClustering
+separator/unginify.kls_name = 'nussl.separation.composite.EnsembleClustering'
+
+# Parameters for evaluator/unginify:
+# ==============================================================================
+evaluator/unginify.kls = @nussl.evaluation.BSSEvalScale
+evaluator/unginify.kls_name = 'nussl.evaluation.BSSEvalScale'
+
+# Parameters for MixSourceFolder:
+# ==============================================================================
+MixSourceFolder.stft_params = @stft_params/unginify()

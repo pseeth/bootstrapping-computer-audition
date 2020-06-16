@@ -1,0 +1,6 @@
+include "musdb/env.gin"
+
+process.input_directory = %MUSDB_ROOT
+process.output_directory = %SCAPER_SOURCE_MATERIAL
+process.resample_rate = 16000
+process.num_workers = 10

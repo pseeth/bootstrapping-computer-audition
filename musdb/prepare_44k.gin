@@ -1,0 +1,6 @@
+include "musdb/env.gin"
+
+process.input_directory = %MUSDB_ROOT
+process.output_directory = "/home/data/musdb/formatted/wav44k/" 
+process.resample_rate = None
+process.num_workers = 10

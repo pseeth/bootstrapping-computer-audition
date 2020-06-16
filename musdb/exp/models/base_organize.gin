@@ -1,0 +1,7 @@
+construct_dataframe.json_path = "/home/pseetharaman/Dropbox/research/bootstrapping/musdb/exp/segment_and_separate/*/results/*"
+construct_dataframe.sep_audio_path = '/home/data/music_separated_wav/'
+construct_dataframe.og_audio_path = '/home/data/music/'
+construct_dataframe.cache_location = '/home/data/music_symlinks/'
+
+construct_dataframe_from_json.json_path = "/home/pseetharaman/Dropbox/research/bootstrapping/musdb/exp/segment_and_separate/Primitive*/results/"
+construct_symlink_folder.df = @construct_dataframe_from_json()

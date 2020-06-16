@@ -1,0 +1,97 @@
+# Global dataset parameters
+# =========================
+nussl.STFTParams.window_length = 512
+nussl.STFTParams.hop_length = 128
+nussl.STFTParams.window_type = 'sqrt_hann'
+
+# unginify is a function to get around the fact that
+# gin objects can't be pickled.
+stft_params/unginify.kls = @nussl.STFTParams
+stft_params/unginify.kls_name = "nussl.STFTParams"
+
+nussl.datasets.OnTheFly.stft_params = @stft_params/unginify()
+nussl.datasets.MixSourceFolder.stft_params = @stft_params/unginify()
+
+# Dataset transforms for train and val splits
+# ===========================================
+build_transforms.transform_names_and_args = \
+    [('PhaseSensitiveSpectrumApproximation', {}),
+     ('MagnitudeWeights', {}),
+     ('Cache', {}),
+     ('ToSeparationModel', {})]
+
+val/build_transforms.transform_names_and_args = \
+    [('PhaseSensitiveSpectrumApproximation', {}),
+     ('Cache', {}),
+     ('ToSeparationModel', {})]
+
+# Caching
+# =======
+cache.num_cache_workers = 40
+cache.batch_size = 40
+
+# Below, macros come from your env.gin.
+#
+# Building train dataset
+# ======================
+train/fg/join_path.base_path = %SCAPER_SOURCE_MATERIAL
+train/build_transforms.cache_location = None
+
+train/fg/join_path.relative_path = 'train'
+train/create_mix_coherent_closure.fg_path = @train/fg/join_path()
+train/create_mix_coherent_closure.bg_path = @train/fg/join_path()
+train/create_mix_coherent_closure.scene_duration = 7
+train/create_mix_coherent_closure.sample_rate = 16000
+train/create_mix_coherent_closure.fg_event_parameters = {
+    'label': ('choose', ['vocals', 'accompaniment']),
+    'source_file': ('choose', []),
+    'source_time': ('uniform', 0, 1000),
+    'event_time': ('const', 0),
+    'event_duration': ('const', 8.75),
+    'snr': ('uniform', 10, 15),
+    'pitch_shift': ('uniform', -1, 1),
+    'time_stretch': ('uniform', 0.8, 1.2)
+}
+train/create_mix_coherent_closure.labels = [
+    'vocals', 'accompaniment'
+]
+train/create_mix_coherent_closure.num_channels = 1
+train/create_mix_coherent_closure.bg_event_parameters = {
+    'label': ('choose', []),
+    'source_file': ('choose', []),
+    'source_time': ('uniform', 0, 1000)
+}
+train/create_mix_coherent_closure.ref_db = -40
+train/create_mix_coherent_closure.bitdepth = 16
+train/create_mix_coherent_closure.quick_pitch_time = False
+train/create_mix_coherent_closure.ignore_warnings = True
+
+train/nussl.datasets.OnTheFly.transform = @train/build_transforms()
+train/nussl.datasets.OnTheFly.mix_closure = @train/create_mix_coherent_closure()
+train/nussl.datasets.OnTheFly.num_mixtures = 20000
+train/build_dataset.dataset_class = @train/nussl.datasets.OnTheFly
+
+# Building val dataset
+# ====================
+val/join_path.base_path = %SCAPER_SOURCE_MATERIAL
+val/build_transforms.cache_location = None
+val/join_path.relative_path = 'valid'
+val/nussl.datasets.MixSourceFolder.folder = @val/join_path()
+val/nussl.datasets.MixSourceFolder.mix_folder = "mixture"
+val/nussl.datasets.MixSourceFolder.source_folders = [
+    "vocals", "accompaniment"
+]
+val/nussl.datasets.MixSourceFolder.transform = @val/build_transforms()
+val/build_dataset.dataset_class = @val/nussl.datasets.MixSourceFolder
+val/MixSourceFolder.num_channels = 1
+
+# Building test dataset
+# =====================
+test/join_path.base_path = %SCAPER_SOURCE_MATERIAL
+test/join_path.relative_path = 'test'
+test/nussl.datasets.MixSourceFolder.folder = @test/join_path()
+test/nussl.datasets.MixSourceFolder.mix_folder = "mixture"
+test/nussl.datasets.MixSourceFolder.source_folders = [
+    "vocals", "accompaniment"
+]
+test/build_dataset.dataset_class = @test/nussl.datasets.MixSourceFolder

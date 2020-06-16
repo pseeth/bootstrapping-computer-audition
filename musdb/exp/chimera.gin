@@ -1,0 +1,95 @@
+# Output folder is defined at runtime
+# ===================================
+output_folder._output_folder = None
+model_path.model_suffix = 'checkpoints/best.model.pth'
+
+# Sweep parameters
+# ================
+sweep.parameters = {
+    "add_autoclip_gradient_handler.clip_percentile": [10]
+}
+
+# Building up Chimera network
+# ===========================
+nussl.ml.networks.builders.build_recurrent_chimera.num_features = 257
+nussl.ml.networks.builders.build_recurrent_chimera.hidden_size = 300
+nussl.ml.networks.builders.build_recurrent_chimera.num_layers = 4
+nussl.ml.networks.builders.build_recurrent_chimera.bidirectional = True
+nussl.ml.networks.builders.build_recurrent_chimera.dropout = 0.3
+nussl.ml.networks.builders.build_recurrent_chimera.num_sources = 2
+nussl.ml.networks.builders.build_recurrent_chimera.embedding_size = 20
+nussl.ml.networks.builders.build_recurrent_chimera.embedding_activation = \
+    ['sigmoid', 'unit_norm']
+nussl.ml.networks.builders.build_recurrent_chimera.mask_activation = \
+    ['sigmoid']
+
+# Build model, optimizer, scheduler
+# =================================
+torch.optim.Adam.lr = .001
+torch.optim.lr_scheduler.ReduceLROnPlateau.factor = 0.5
+torch.optim.lr_scheduler.ReduceLROnPlateau.patience = 5
+
+build_model_optimizer_scheduler.optimizer_class = \
+    @torch.optim.Adam
+build_model_optimizer_scheduler.scheduler_class = \
+    @torch.optim.lr_scheduler.ReduceLROnPlateau
+build_model_optimizer_scheduler.model_config = \
+    @nussl.ml.networks.builders.build_recurrent_chimera()
+
+# Building up train arguments
+# ===========================
+train.output_folder = @output_folder()
+train.loss_dictionary = {
+   'MaskInferenceLoss': {
+        'class': 'L1Loss',
+        'weight': 1,
+    },
+    'WhitenedKMeansLoss': {
+        'weight': 20000,
+    },
+}
+train.val_loss_dictionary = {
+   'MaskInferenceLoss': {
+        'class': 'L1Loss',
+        'weight': 1,
+    },
+}
+
+train.device = "cuda"
+train.num_epochs = 100
+train.num_data_workers = 40
+train.batch_size = 25
+train.val_batch_size = 1
+train.seed = 0
+
+# Add handlers and set arguments
+# ==============================
+add_auto_balance_loss.update_frequency = 100
+
+add_train_handlers.handler_names = [
+    "add_lr_scheduler_handler",
+    "add_autoclip_gradient_handler",
+    "add_auto_balance_loss",
+]
+
+# Building up evaluation arguments
+# ================================
+evaluate.output_folder = @output_folder()
+
+BSSEvalScale.compute_permutation = False
+# note: sources go in alphabetical order
+BSSEvalScale.source_labels = [
+    'accompaniment', 'vocals'
+]
+
+nussl.separation.deep.DeepMaskEstimation.model_path = @model_path()
+evaluate.separation_algorithm = @nussl.separation.deep.DeepMaskEstimation
+evaluate.block_on_gpu = True
+evaluate.eval_class = @nussl.evaluation.BSSEvalScale
+evaluate.num_workers = 5
+evaluate.output_folder = @output_folder()
+evaluate.seed = 0
+
+# Building up analysis arguments
+# ==============================
+analyze.output_folder = @output_folder()

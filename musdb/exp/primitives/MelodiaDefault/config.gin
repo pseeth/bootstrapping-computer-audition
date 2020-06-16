@@ -1,0 +1,78 @@
+# Macros:
+# ==============================================================================
+MUSDB_ROOT = '/home/data/musdb/raw/stems/'
+SCAPER_PATH = '/home/data/musdb/formatted/generated/'
+SCAPER_SOURCE_MATERIAL = '/home/data/musdb/formatted/wav16k/'
+TRAIN_CACHE = '/media/sdg/cache/musdb/tr'
+TRAIN_FOLDER = '/home/data/musdb/formatted/generated/aug/coherent/train'
+VAL_CACHE = '/media/sdg/cache/musdb/cv'
+VAL_FOLDER = '/home/data/musdb/formatted/generated/aug/coherent/val'
+
+# Parameters for analyze:
+# ==============================================================================
+analyze.output_folder = @output_folder()
+
+# Parameters for BSSEvalScale:
+# ==============================================================================
+BSSEvalScale.compute_permutation = False
+BSSEvalScale.source_labels = ['accompaniment', 'vocals']
+
+# Parameters for test/build_dataset:
+# ==============================================================================
+test/build_dataset.dataset_class = @test/nussl.datasets.MixSourceFolder
+
+# Parameters for nussl.separation.primitive.Melodia:
+# ==============================================================================
+nussl.separation.primitive.Melodia.add_lower_octave = False
+nussl.separation.primitive.Melodia.apply_vowel_filter = False
+
+# Parameters for evaluate:
+# ==============================================================================
+evaluate.block_on_gpu = False
+evaluate.eval_class = @evaluator/unginify
+evaluate.num_workers = 10
+evaluate.output_folder = @output_folder()
+evaluate.seed = 0
+evaluate.separation_algorithm = @separator/unginify
+evaluate.use_threadpool = False
+
+# Parameters for test/join_path:
+# ==============================================================================
+test/join_path.base_path = %SCAPER_SOURCE_MATERIAL
+test/join_path.relative_path = 'test'
+
+# Parameters for test/MixSourceFolder:
+# ==============================================================================
+test/MixSourceFolder.folder = @test/join_path()
+test/MixSourceFolder.mix_folder = 'mixture'
+test/MixSourceFolder.source_folders = ['vocals', 'accompaniment']
+
+# Parameters for output_folder:
+# ==============================================================================
+output_folder._output_folder = \
+    '/home/pseetharaman/Dropbox/research/bootstrapping/musdb/exp/primitives/MelodiaDefault'
+
+# Parameters for STFTParams:
+# ==============================================================================
+STFTParams.hop_length = 128
+STFTParams.window_length = 512
+STFTParams.window_type = 'sqrt_hann'
+
+# Parameters for stft_params/unginify:
+# ==============================================================================
+stft_params/unginify.kls = @nussl.STFTParams
+stft_params/unginify.kls_name = 'nussl.STFTParams'
+
+# Parameters for separator/unginify:
+# ==============================================================================
+separator/unginify.kls = @nussl.separation.primitive.Melodia
+separator/unginify.kls_name = 'nussl.separation.primitive.Melodia'
+
+# Parameters for evaluator/unginify:
+# ==============================================================================
+evaluator/unginify.kls = @nussl.evaluation.BSSEvalScale
+evaluator/unginify.kls_name = 'nussl.evaluation.BSSEvalScale'
+
+# Parameters for MixSourceFolder:
+# ==============================================================================
+MixSourceFolder.stft_params = @stft_params/unginify()

@@ -1,0 +1,16 @@
+include "musdb/exp/models/base_organize.gin"
+
+filter_row_by_confidence.perc_min = 0
+filter_row_by_confidence.perc_max = 20
+filter_df_by_label.labels = [
+    'train',
+    'decades',
+    'pop',
+    'rock',
+    'pop2',
+]
+
+construct_symlink_folder.destination = "/home/data/music_symlinks/all/q1/"
+construct_symlink_folder.rules = [
+    @filter_row_by_confidence,
+]

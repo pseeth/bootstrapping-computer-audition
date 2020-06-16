@@ -1,0 +1,25 @@
+name: bootstrapping
+
+channels:
+  - conda-forge
+  - pytorch
+
+dependencies:
+  - python=3.7
+  - pytorch
+  - ffmpeg
+  - sox
+  - resampy
+  - pip
+  - jupyterlab
+  - pip:
+    - git+git://github.com/justinsalamon/scaper.git@soxbindings
+    - git+git://github.com/nussl/nussl
+    - git+git://github.com/pseeth/soxbindings
+    - git+git://github.com/faroit/stempeg.git@add_new_ffmpegprocess
+    - git+https://github.com/google/gin-config@f272ce654b47ee5df778f521556042dee82e23f5
+    - IPython
+    - ffmpy
+    - nvgpu
+    - p_tqdm
+    - seaborn
